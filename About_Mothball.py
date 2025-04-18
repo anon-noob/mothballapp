@@ -27,8 +27,9 @@ Lastly, if you haven't already, download MPK/CYV to enhance your in game parkour
 
     def __init__(self, master=None):
         self.top = tk.Toplevel(master)
+        self.top.geometry("520x400")
         self.text = Page(self.top, scrollable=True)
-        self.text.mainframe.pack()
+        self.text.mainframe.pack(fill='both', expand=True)
         self.text.parse_text(About.TEXT)
         self.text.finalize()
 
