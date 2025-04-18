@@ -454,7 +454,7 @@ class MainNotebookGUI(tk.Tk):
     def check_updates(self, show_message = False):
         text = f"You're using Mothball version {MainNotebookGUI.VERSION}. "
         try:
-            response = requests.get("https://api.github.com/repos/anon-noob/mothball/releases")
+            response = requests.get("https://api.github.com/repos/anon-noob/mothballapp/releases")
             if response.status_code == 200:
                 releases = response.json()
                 releases = sorted(releases, key=lambda r: r["tag_name"], reverse=True)
