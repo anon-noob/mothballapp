@@ -21,7 +21,7 @@ import Version
 class MainNotebookGUI(tk.Tk):
 
     FRAMES: dict[int, Cell | TextBox] = {}
-    VERSION: str = "v0.4-alpha"
+    VERSION: str = "v1.0"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
