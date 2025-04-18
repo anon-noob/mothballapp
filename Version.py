@@ -6,8 +6,9 @@ class Version:
         
     def __init__(self, version, master=None):
         self.top = tk.Toplevel(master)
+        self.top.geometry("520x400")
         self.text = Page(self.top, scrollable=True)
-        self.text.mainframe.pack()
+        self.text.mainframe.pack(fill='both', expand=True)
         a,b = self.check_updates()
         self.text.parse_text(f"""You are on Mothball version {version}\nLatest version {a} changelog:\n{b}""")
         self.text.finalize()
