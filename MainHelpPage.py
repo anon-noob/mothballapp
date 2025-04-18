@@ -56,7 +56,7 @@ with open(os.path.join(base_path, "Mothball_Pages/SetterDocumentation.txt")) as 
     setterdocumentationHEADINGS = Page.get_headings(setterdocumentation)
 
 
-class MainHelpPage(tk.Frame):
+class MainHelpPage:
     def __init__(self, master):
         self.top = tk.Toplevel(master)
 
