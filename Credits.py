@@ -16,8 +16,9 @@ Thank Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube
 """
     def __init__(self, master=None):
         self.top = tk.Toplevel(master)
+        self.top.geometry("520x400")
         self.text = Page(self.top, scrollable=True)
-        self.text.mainframe.pack()
+        self.text.mainframe.pack(fill='both', expand=True)
         self.text.parse_text(Credits.TEXT)
         self.text.finalize()
 
