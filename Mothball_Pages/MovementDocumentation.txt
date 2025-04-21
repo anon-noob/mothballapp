@@ -5,12 +5,12 @@ Here, you will find all the information for each movement function. A few things
 A function that can be "modified by inputs" means that a function can append inputs like this: `sprint.wa`. This means to sprint with W and A. If no input is given, then it defaults to just W. Possible inputs are combinations of WASD. Any 45 strafe function cannot be modified by inputs. Any movement where the player does not input anything (`stop`, `stopair`, `stopjump`, etc) cannot be modified by inputs.
 
 ## Movement Modifiers
-You can place modifiers in between square brackets `[]` before the function arguments. Valid modifiers are `water (wt) web lava (lv) block (bl)` with aliases shown in parenthesis. Water means the player is inside water, web means the player is insie web, lava means the player is inside lava, and block means the player is sword blocking or shielding. The following are valid syntax. They are not equivalent to each other.
+You can place modifiers in between square brackets `[]` before the function arguments. Valid modifiers are `water (wt) web lava (lv) block (bl) ladder (ld,vine)` with aliases shown in parenthesis. Water means the player is inside water, web means the player is insie web, lava means the player is inside lava, block means the player is sword blocking or shielding, and ladder means the player is inside the ladder hitbox. The following are valid syntax. They are not equivalent to each other.
 
 ```mothball
 walk[water]
 walk.wd[lava, web]
-walk.wa[web](4)
+walk.wa[ladder](4)
 walk[block](2, slip=0.8)
 ```
 
@@ -19,7 +19,7 @@ The order goes `movement.inputs[modifiers](arguments)`.
 Only movement functions can be modified. Additionally, you can have any combinations of modifiers.
 
 ### Nonsensical Movement
-Beware that you can simulate movement which would otherwise be impossible in game. For example `sprintjump[water]` is nonsensical, which is equivalent to `sprintjump(slip=0.8/0.91)`, but in game, yo can't jump while inside water. Also, if movement is modified by both `water` and `lava`, then the simulation will simulate `water` movement, which is just like in game as well.
+Beware that you can simulate movement which would otherwise be impossible in game. For example `sprintjump[water]` is nonsensical, which is equivalent to `sprintjump(slip=0.8/0.91)`, but in game, yo can't jump while inside water. Also, if movement is modified by both `water` and `lava`, then the simulation will simulate `water` movement, which is just like in game as well. Luckily for you, we also made it so any time sneaking has a `ladder` modifier, it will automatically convert to sneak air. 
 
 ## Rotation and Facing
 The terms "rotation" and "facing" both refer to the angle at which the player is looking. You will encounter descriptions like "45 strafing towards the direction of <angle>". This means that the player is looking at <angle> while also having the 45 strafe boost. For example, consider the movement "sprint and 45 strafing towards the direction of 4 degrees". Both `sprint.wa(1, 49)` and `sprint45(1, 4)` achieve the same movement.
