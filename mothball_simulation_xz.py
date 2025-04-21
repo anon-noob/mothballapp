@@ -39,7 +39,7 @@ class Player:
     GROUND = "ground"
     AIR = "air"
 
-    MODIFIERS = ["water", "web", "lava", "block"]
+    MODIFIERS = ["water", "web", "lava", "block", "ladder", "vine"]
 
     ALIAS_TO_MODIFIER = {"water": "water",
                          "wt": "water",
@@ -47,7 +47,11 @@ class Player:
                          "lava": "lava",
                          "web": "web",
                          "block": "block",
-                         "bl": "block"}
+                         "bl": "block",
+                         "ladder": "ladder",
+                         "ld": "ladder",
+                         "vine": "ladder"
+                         }
 
     FUNCTIONS = {}
 
@@ -114,7 +118,7 @@ class Player:
         self.swift = 0 # This is because the function will be called speed
         self.slow = 0
         
-        self.local_vars = {"px": 0.0625, "blocks": 0.6, "zneo": -0.6, "ladder":0.3, "vine":0.3}
+        self.local_vars = {"px": 0.0625}
         self.local_funcs = {}
 
         self.output: list[tuple[str | Literal['normal', 'z-expr', 'x-expr', 'expr']]] = []
@@ -251,7 +255,7 @@ class Player:
             return self.rotation
         return self.rotation
 
-    def move(self, duration: int, rotation: f32 = None, rotation_offset: float = 0.0, slip: f32 = None, is_sprinting: bool = False, is_sneaking: bool = False, speed: int = None, slow: int = None, state: Literal["ground", "air", "jump", "water"] = "ground"):
+    def move(self, duration: int, rotation: f32 = None, rotation_offset: float = 0.0, slip: f32 = None, is_sprinting: bool = False, is_sneaking: bool = False, speed: int = None, slow: int = None, state: Literal["ground", "air", "jump"] = "ground"):
         """
         Moves the player for `duration` ticks with a slip value of `slip`.
 
@@ -262,11 +266,13 @@ class Player:
         Although there is no hard restriction, in later versions, `is_sprinting` and `is_sneaking` can be set to `True` at the same time.
         """
 
-        # NEEDS TO CHANGE probably
+        # Setting slipperiness here and treating it like air is analytically and numerically equivalent
         if "water" in self.modifiers:
             slip=f32(0.8/0.91)
         elif "lava" in self.modifiers:
             slip=f32(0.5/0.91)
+        
+
         
         sj_boost = self.sprintjump_boost
         if self.previous_slip is None:
@@ -281,6 +287,9 @@ class Player:
             slow = self.slow
 
         self.state = state
+        # If sneaking is modified by ladders, always set the state to AIR
+        if ((self.sneak_delay and self.previously_sneaking) or (not self.sneak_delay and is_sneaking)) and "ladder" in self.modifiers:
+            self.state = self.AIR
 
         override_rotation = False
         if (rotation is not None):
@@ -326,17 +335,15 @@ class Player:
                     self.vz = 0.0
 
             # Get Movement Multiplier M
-            M = self.movement_multiplier(slip, is_sprinting, speed, slow, state)
+            M = self.movement_multiplier(slip, is_sprinting, speed, slow, self.state)
 
             # Sprint jump boost
-            if state == self.JUMP and is_sprinting:
+            if self.state == self.JUMP and is_sprinting:
                 facing = f32(rotation * f32(0.017453292)) # TO CHANGE
                 self.vx -= self.mcsin(facing) * sj_boost
                 self.vz += self.mccos(facing) * sj_boost
 
             # BLOCKING
-            # if ((self.state == self.AIR) and (self.previously_blocking) or (is_blocking)):
-            # if is_blocking:
             if "block" in self.modifiers:
                 forward = f32(float(forward) * 0.2)
                 strafe  = f32(float(strafe) * 0.2)
@@ -374,6 +381,9 @@ class Player:
             if "web" in self.modifiers:
                 self.vx = self.vx / 4
                 self.vz = self.vz / 4
+            if "ladder" in self.modifiers:
+                self.vx = min(max(self.vx, -0.15),0.15)
+                self.vz = min(max(self.vz, -0.15),0.15)
             
             
             # Prep for next tick
@@ -456,7 +466,7 @@ class Player:
 
         NOTE ON WATER: it seems that the equation for water is the same as air with S = 0.8/0.91 and M being either 1 or 0 multiplied by 0.98 or 1
         """
-        if "water" in self.modifiers or "lava" in self.modifiers:
+        if "water" in self.modifiers or "lava" in self.modifiers: # It doesnt matter if you are in web
             M = f32(0.02)
         
 
