@@ -12,8 +12,6 @@ from pprint import pp
 # water is at least e-14 precise, not e-17 (i think)
 # fix functions
 # aq and tq in optimize doesnt work
-# Lava
-# Web air
 # Custom Defined Recursive Functions
 # # This also means adding conditionals
 # Fix type annotations in custom defined functions
@@ -28,7 +26,7 @@ class Player:
     _fortyfive_methods = ["walk45", "walkair45", "walkjump45", "sprint45", "sprintair45", "sprintjump45", "sneak45", "sneakair45", "sneakjump45", "sneaksprint45", "sneaksprintair45", "sneaksprintjump45", "walkwater45", "sprintwater45", "sneakwater45", "sword45", "swordair45", "swordsneak45", "swordsneakair45", "swordwater45", "swordsneakwater45", "swordjump45", "swordsneakjump45", "web45", "webair45", "sprintwebair45", "sprintweb45", "webjump45", "sprintwebjump45", "sneakweb45", "sneakwebair45", "sneaksprintweb45", "sneaksprintwebjump45", "sneaksprintwebair45", "sneakwebjump45", "snwebj45"]
 
     _can_have_input = ["walk", "walkair", "walkjump", "sprint", "sprintair", "sprintjump", "sneak", "sneakair", "sneakjump", "sneaksprint", "sneaksprintair", "sneaksprintjump", "walkwater", "sprintwater", "sneakwater", "lava", "sword", "swordair", "swordsneak", "swordsneakair", "swordwater", "swordsneakwater", "swordjump", "swordsneakjump", "web", "webair", "sprintweb", "sprintwebair", "webjump", "sprintwebjump", "sneakweb", "sneakwebair", "sneaksprintweb", "sneaksprintwebjump", "sneaksprintwebair", "sneakwebjump", "snwebj"]
-    _can_have_modifiers = _fortyfive_methods + _can_have_input + ["stop", "stopjump", "stopair"]
+    _can_have_modifiers = _fortyfive_methods + _can_have_input + ["stop", "stopjump", "stopair", "sneakstop", "sneakstopair", "sneakstopjump"]
 
     mm_to_dist = dist_to_block = lambda mm: (mm + copysign(f32(0.6), mm))
     dist_to_mm = block_to_dist = lambda dist: (dist - copysign(f32(0.6), dist))
@@ -60,11 +58,11 @@ class Player:
     ], "slow-movers": [
         "walk", "w", "walkair", "wa", "walkjump", "wj", "walk45", "w45", "walkair45", "wa45", "walkjump45", "wj45", "sneak", "sneak45", "sn", "sn45", "sneakair", "sneakair45", "sna", "sna45", "sneakjump", "snj", "sneakjump45", "snj45"
     ], "stoppers": [
-        "stop", "stopground", "st", "stopair", "sta", "stopjump", "stj"
+        "stop", "stopground", "st", "stopair", "sta", "stopjump", "stj", "sneakstop", "sneakstopair", "sneakstopjump", "snst", "snsta", "snstj"
     ], "returners": [
         "outz", "zmm", "zb", "outvz", "outx", "xmm", "xb", "outvx", "vec", "help", "print", "effectsmultiplier", "effects", "printdisplay", "dimensions", "dim", "outangle", "outa", "outfacing", "outf", "outturn", "outt"
     ], "calculators": [
-        "bwmm", "xbwmm", "wall", "xwall", "inv", "xinv", "blocks", "xblocks", "repeat", "r", "possibilities", "poss", "xpossibilities", "xposs", "xzpossibilities", "xzposs"
+        "bwmm", "xbwmm", "wall", "xwall", "inv", "xinv", "blocks", "xblocks", "repeat", "r", "possibilities", "poss", "xpossibilities", "xposs", "xzpossibilities", "xzposs", 'taps'
     ], "setters": [
         "face", "facing", "f", "turn", "setposz", "z", "setvz", "vz", "setposx", "x", "setvx", "vx", "setslip", "slip", "setprecision", "precision", "pre", "inertia", "sprintairdelay", "sdel", "version", "v", "anglequeue", "aq", "tq", "turnqueue", "speed", "slow", "slowness", "sndel", "sneakdelay", "var", "function", "func", "alias", "toggle", "singleaxisinertia",
     ]}
@@ -124,6 +122,14 @@ class Player:
         self.output: list[tuple[str | Literal['normal', 'z-expr', 'x-expr', 'expr']]] = []
 
         self.closed_vars = {} # For declaring functions only
+    
+    @staticmethod
+    def isfloat(string: str):
+        try: 
+            float(string)
+            return True
+        except ValueError: 
+            return False
 
     @staticmethod
     def add_alias(func: object, *alias, dictionary: dict = FUNCTIONS):
@@ -594,7 +600,6 @@ class Player:
     def sneakair45(self, duration: int = 1, rotation: f32 = None, /):
         self.move(duration, rotation, 45, slip=1.0, is_sneaking=True, state=self.AIR)
     
-
     def sneakjump(self, duration: int = 1, rotation: f32 = None, /, *, slip: f32 = None, speed: int = None, slow: int = None):
         if duration > 0:
             self.move(1, rotation, slip=slip, is_sneaking=True, state=self.JUMP, speed=speed, slow=slow)
@@ -615,6 +620,19 @@ class Player:
         if duration > 0:
             self.move(1, slip=slip, state=self.JUMP)
             self.stopair(duration - 1)
+    
+    def sneakstop(self, duration: int = 1, /, *, slip: f32 = None):
+        self.move(duration, slip=slip, state=self.GROUND, is_sneaking=True)
+    
+    def sneakstopair(self, duration: int = 1, /):
+        self.move(duration, slip=1.0, state=self.AIR, is_sneaking=True)
+    
+    def sneakstopjump(self, duration: int = 1, /, *, slip: f32 = None):
+        if duration > 0:
+            self.move(1, slip=slip, state=self.JUMP, is_sneaking=True)
+            self.stopair(duration - 1)
+    
+
     
     def sneaksprint(self, duration: int = 1, rotation: f32 = None, /, *, slip: f32 = None, speed: int = None, slow: int = None):
         self.move(duration, rotation, slip=slip, is_sprinting=True, is_sneaking=True, state=self.GROUND, speed=speed, slow=slow)
@@ -1215,6 +1233,51 @@ class Player:
         p.local_vars = player.local_vars
 
         return p
+
+    def taps(self, *seq_or_num: str):
+        """
+        Runs each sequence until the player fully stops **on the ground**, or based on the most recent modifiers used. If a number is passed, execute the previous sequence that many times.
+        
+        Sequences can be provided as standalone arguments which will run once, or it can have a number following it, indicating how many times to execute it.
+
+        NOTE 1: Sneak delay is toggled off while executing taps.
+
+        NOTE 2: To do air taps, provide all necessary air ticks, for example `taps(stj sa sta(10))` is not the same as `taps(sa)`
+
+        Example: `taps(sneak, 3)`. Execute `sneak` and stop moving until the player is stationary, for a total of 3 times. In parkour notation, this is equivalent to "3st W" or "3 shift tap W"
+
+        Example: `taps(walk, stj sneakair sta(10), 2)` executes `walk` once and `stj sneakair sta(10)` twice. In parkour notation, "1ut W 2ast W".
+        
+        Example: `taps(walk[water](5))` walk while in water for 5t, then stops in water since the player was in water.
+        """
+        d = {}
+        last_seq = ""
+        after_num = False
+        for i in seq_or_num:
+            
+            if i.isnumeric():
+                if after_num or not d:
+                    raise SyntaxError(f"Numbers must follow after a sequence. {f'{i} comes after a number' if d else f'{i} has no sequence to follow'}.")
+                d[last_seq] = int(i)
+                after_num = True
+            elif self.isfloat(i):
+                raise TypeError(f"Number should be an integer, not a float ({i})")
+            else:
+                last_seq = i
+                d[last_seq] = 1
+                after_num = False
+        
+        had_sneak_delay = self.sneak_delay
+        self.sneak_delay = False
+        for k,v in d.items():
+            for _ in range(v):
+                self.simulate(k, return_defaults=False)
+                modifiers = ",".join(self.modifiers)
+                while self.vx != 0 or self.vz != 0:
+                    self.simulate(f"stop[{modifiers}]", return_defaults=False)
+        if had_sneak_delay:
+            self.sneak_delay = True
+
     
     def optimize(self, x: float, z: float, sequence: str, conversion: "function" = lambda x: x, /) -> tuple[float, float] | float:
         p1 = Player.copy_player(self)
@@ -1392,6 +1455,9 @@ self.local_funcs['{name}'] = {name}
     add_alias(stop, "stopground", "stop", "st")
     add_alias(stopair, "stopair", "sta")
     add_alias(stopjump, "stopjump", "stj")
+    add_alias(sneakstop, "sneakstop", "snst")
+    add_alias(sneakstopair, "sneakstopair", "snsta")
+    add_alias(sneakstopjump, "sneakstopjump", "snstj")
     
     # WITH 45
     add_alias(walk45, "w45", "walk45")
@@ -1459,6 +1525,7 @@ self.local_funcs['{name}'] = {name}
     # Fix this for displaying (multilines)
 
     # OPTIMIZERS
+    add_alias(taps, "taps")
     add_alias(bwmm, "bwmm")
     add_alias(xbwmm, "xbwmm")
     add_alias(wall, "wall", "inv")
@@ -1886,20 +1953,11 @@ self.local_funcs['{name}'] = {name}
         return f32(sin(index * self.pi * 2.0 / self.total_angles))
 
 
-    ## TEST ZONE
-    def sneaktap(self, count: int = 1, duration: int = 1):
-        for i in range(count):
-            self.simulate(f"sn{f'.{self.inputs}' if self.inputs else ''}({duration})", return_defaults=False)
-            while self.vz != 0 or self.vx != 0:
-                self.simulate("st", return_defaults=False)
-
-    _can_have_input.append("sneaktap")
-    add_alias(sneaktap, "snt")
 
 if __name__ == "__main__":
     a = Player()
 
-    s = 'help(slowness)'
+    s = 'taps(walk[water](5))'
     a.simulate(s)
     print("Parsed: ", s)
     b = a.show_output()
