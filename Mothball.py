@@ -21,7 +21,7 @@ import Version
 class MainNotebookGUI(tk.Tk):
 
     FRAMES: dict[int, Cell | TextBox] = {}
-    VERSION: str = "v1.0.1"
+    VERSION: str = "v1.0"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -138,6 +138,12 @@ class MainNotebookGUI(tk.Tk):
 
         # self.after("idle",self.check_updates)
 
+    def bind_focused_cell(self, cell: Cell | TextBox):
+        if cell.type == "code":
+            self.bind_all("<Control-r>", lambda x: cell.evaluate())
+        else:
+            self.bind_all("<Control-r>", lambda x: cell.eval_button.invoke())
+
     def _on_configure(self, event: tk.Event, widget_id, delay = 500):
         if event.type == tk.EventType.Configure:
             if hasattr(self, '_resize_after_id'):
@@ -172,6 +178,7 @@ class MainNotebookGUI(tk.Tk):
         new_cell.add_cell_y.configure(command=lambda a=row + 1: self.createbox(a, "y"))
         new_cell.add_text.configure(command=lambda a=row + 1: self.createbox(a, "edit"))
         new_cell.delete_cell.configure(command=lambda a=row + 1: self.deletecell(a))
+        new_cell.bind("<FocusIn>", lambda event: self.bind_focused_cell(new_cell))
         new_cell.grid(row=row + 1, sticky="nswe")
 
         # Update the scroll region of the canvas
@@ -196,6 +203,7 @@ class MainNotebookGUI(tk.Tk):
         frames[row + 1] = new_cell
         
         # if resize: self._resize_widgets(None, self.id)
+        new_cell.adjust_width(self.current_width)
         self.update_idletasks()
     
     def deletecell(self, row):
@@ -228,9 +236,8 @@ class MainNotebookGUI(tk.Tk):
             frame.text_button.configure(command=lambda a = 0: self.createbox(a, "edit"))
             frame.pack(fill="x")
             MainNotebookGUI.FRAMES[0] = frame
-        
-        # self.event_generate('<Configure>')
-
+            
+        self.unbind_all("<Control-r>")
     
     def _on_mousewheel(self, event: tk.Event):
         a = self.winfo_containing(event.x_root, event.y_root)
@@ -331,6 +338,8 @@ class MainNotebookGUI(tk.Tk):
 
         file = askopenfile(initialdir=os.path.join(self.user_directory, "Documents", "Mothball", "Notebooks"), defaultextension=".json")
         if not file:
+            return "break"
+        elif self.file_name and (self.file_name in file.name): # Already on file requested to open
             return "break"
         data = json.load(file)
         file.close()
