@@ -104,7 +104,7 @@ class Cell(tk.Frame):
         self.output.configure(state="disabled")
 
         self.options = options
-        self.bind_all("<Control-r>", lambda x: self.evaluate())
+        # self.bind("<Control-r>", lambda x: self.evaluate())
 
         # Linter
         for tag_name, foreground_color in self.options["Current-theme"]["Code"].items():
@@ -344,7 +344,7 @@ class Cell(tk.Frame):
                 self.apply_tag(token, "custom-function-parameter")
                 local_variables_stack[-1].add(token)
 
-            elif current_parameter_type == str and token not in "(),\\{}=[]" and not in_bracket and function_stack.peek().current_parameter.name not in ['sequence', 'value','code', 'func']:
+            elif current_parameter_type == str and token not in "(),\\{}=[]" and not in_bracket and function_stack.peek().current_parameter.name not in ['sequence', 'value','code', 'func', 'seq_or_num']:
                 self.apply_tag(token, "string")
                 if token == "\n":
                     self._pos = self._pos.add_row(1).reset_column()
@@ -355,7 +355,7 @@ class Cell(tk.Frame):
             elif local_variables_stack and token in local_variables_stack[-1]:
                 self.apply_tag(token, "custom-function-parameter")
 
-            elif token in defined_variables and nest_depth and (function_stack.is_empty() or (function_stack.peek().current_parameter and function_stack.peek().current_parameter.name not in ["sequence"])): # PLEASE CHECK LOGIC !
+            elif token in defined_variables and nest_depth and (function_stack.is_empty() or (function_stack.peek().current_parameter and function_stack.peek().current_parameter.name not in ["sequence", 'seq_or_num'])): # PLEASE CHECK LOGIC !
                 self.apply_tag(token, "variable")
 
             else:
@@ -1246,7 +1246,6 @@ class TextBox(tk.Frame):
         num_lines = self.textbox.mainframe.count("1.0", tk.END, "displaylines")[0]
 
         if mode == "render": # THIS ALGORITHM SHOULD BE CHANGED!!!
-            # i = 0
             a,b = self.textbox.mainframe.yview()
             num_lines = int(num_lines / (b-a))
             # for _ in range(100):
@@ -1257,21 +1256,19 @@ class TextBox(tk.Frame):
                 self.update_idletasks()
                 a,b = self.textbox.mainframe.yview()
                 if a == 0 and b == 1:
-                    # print("AT ITERATE (1)", i, "for", num_lines)
                     break
             
             # for _ in range(100):
+            # i = 1
             while True:
-                # i += 1
                 num_lines -= 1
                 self.textbox.mainframe.configure(height=num_lines)
                 self.update_idletasks()
                 a,b = self.textbox.mainframe.yview()
-                if a != 0 or b != 1:
+                if a != 0 or b != 1 or num_lines == 0:
                     num_lines += 1
                     self.textbox.mainframe.configure(height=num_lines)
                     self.update_idletasks()
-                    # print("AT ITERATE (2)", i, "for", num_lines)
                     break
             
             # print("ITERATED", i, 'TIMES')
@@ -1300,16 +1297,16 @@ class TextBox(tk.Frame):
 
 
 if __name__ == "__main__":
-    r = tk.Tk()
-    a = Cell(r, "xz", options) # Test
-    a.grid(row=0, column=0, sticky="nswe")
-    r.grid_rowconfigure(0, weight=1)
-    r.grid_columnconfigure(0, weight=1)
-    
+    # r = tk.Tk()
+    # a = Cell(r, "xz", options) # Test
+    # a.grid(row=0, column=0, sticky="nswe")
+    # r.grid_rowconfigure(0, weight=1)
+    # r.grid_columnconfigure(0, weight=1)
+    print('hi there!')
     
     # r = tk.Tk()
     # a = TextBox(r, options)
     # a.grid(row=0, column=0, sticky="nswe")
     # r.grid_rowconfigure(0, weight=1)
     # r.grid_columnconfigure(0, weight=1)
-    r.mainloop()
+    # r.mainloop()
