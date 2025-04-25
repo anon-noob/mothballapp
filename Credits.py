@@ -10,9 +10,9 @@ To everyone else who has contributed to Mothball, whether it be through code, su
 And to you for using Mothball, thank you!
 
 # News
-Please stop watching the minecraft movie...
+Thank Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)) for helping us revert back to good movement mechanics.
 
-Thank Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)) for helping us revert back to good movement mechanics. 
+THE MEME IS DEAD! NO MORE LAVA CHICKEN JOCKEY!
 """
     def __init__(self, master=None):
         self.top = tk.Toplevel(master)
