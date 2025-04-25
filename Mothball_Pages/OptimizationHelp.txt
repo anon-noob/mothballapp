@@ -6,6 +6,7 @@ Mothball provides several functions that assist in calculating and outputting co
 `blocks` and `xblocks` - given the movement sequence, finds the backward speed that perfectly uses `zb/xb`
 `repeat` or `r` - repeat the sequence a given number of times
 `poss/xposs/xzposs` - list all ticks that land some offset past a pixel on the z/x/x&z axis.
+`taps` - in between each movement, wait until the player stops moving.
 
 # Optimization Functions
 These functions include `bwmm xbwmm wall xwall blocks xblocks`. They take two arguments. First is a number, also called the target distance, and the second is the Mothball code. What they do is they find the right speed so that whatever is run in the Mothball code, the player's position traverses the target distance. The target distance corresponds to how that distance is measured. For example, `bwmm` optimizes for `zmm`, `wall` optimizes for `outz`, `blocks` optimizes for `zb`, and same thing for the x versions.
@@ -102,9 +103,9 @@ Let's suppose we want to find potentially precise jumps for a 6 block momentum s
 sj(12) sj(12) zmm(6) | poss(sj45(30), 0.005)
 ```
 
-Based on the resultt, we found 3 candidate jump distances with offsets less than 0.005. The choice of `sj45(30)` being 30 ticks is arbitrary. It just means we will see results up to 30 ticks of airtime.
+Based on the result, we found 3 candidate jump distances with offsets less than 0.005. The choice of `sj45(30)` being 30 ticks is arbitrary. It just means we will see results up to 30 ticks of airtime.
 
-## Calculating for `zb/outz/zmm`
+### Calculating for `zb/outz/zmm`
 Mothball does the `poss` calcluations in terms of `zb` by default, which is the distance for "block to block" distance jumps. What if instead we wanted to find other landings, such as backwalled landings? We can tell Mothball to offset the numbers in its 3rd argument called `offset`. By default, this is set to `0.6` which is equivalent to `zb/xb`. Setting it to `0` makes it calculate like `outz/outx`, and `-0.6` for `zmm/xmm`. Let's see what backwalled landing we can find with the same momentum and strat.
 
 ```mothball/output
@@ -119,7 +120,7 @@ The offset is the same even if we are going the opposite direction. Mothball wil
 f(180) sj(12) sj(12) zmm(6) | poss(sj45(30), 0.005, 0)
 ```
 
-## Near Misses
+### Near Misses
 If you, for some reason, want to check if there are any near misses, you can! Using the keyword argument `miss = offset`, it will display all ticks where the distance traveled misses the next pixel distance by at most `offset`. In math equations, it displays `a * (0.0625) - b` with `b` being the offset.
 
 ```mothball/output
@@ -128,7 +129,7 @@ bwmm(2, sj45(12)) | poss( sj45(30), 0.01, miss=0.001)
 
 Yea... that tick 27 is one unfortunate miss.
 
-## Increments
+### Increments
 In modern versions, there are blocks that are not a pixel (0.0625) length; some are half a pixel. In order to be able to catch these distances, you can provide the `increment` keyword argument. By default, it is `0.0625`, incrementing by a pixel. For the half pixel case, we would set `increment=0.03125`. Here's what it looks like.
 
 ```mothball/output
@@ -139,3 +140,37 @@ See tick 12? `4.40625 = 4 + 0.0625 * (6.5)`.
 
 ## XZ-variant
 The `xzposs` function combines both `poss` (for z) and `xposs` together. The minimum landing offset considered for both x and z, and will only display if it lands on both x and z. You can offset the x and z axis accordingly if, for example, you wish to calculate `zb` and `outx` at the same time. You can also use the `miss` keyword argument, which will display whenever either x or z has a near miss. Lastly, the increments can be set for each axis, default `0.0625` of course. 
+
+## Taps
+This function simulates movement, then releases all inputs on the ground, or based on the last used modifiers, until the player stops moving. 
+
+This function inputs Mothball sequences and integers. The syntax is `taps(seq1[, count1], seq2[, count2], ...)` which can accept any number of sequences and `countX` tells Mothball how many times to execute `seqX`. Anything in brackets is optional, that is, you are not required to pass an integer for each `count`. If you don't, its corresponding sequence will execute once.
+
+For example, if you want to do 3 shift taps, you would do
+```mothball/output
+taps(sneak, 3)
+```
+
+and for 1 unshift tap W and 2 shift tap D,
+```mothball/output
+taps(walk, sneak, 2)
+# More explicitly: taps(walk, 1, sneak, 2)
+```
+
+Sneak delay is toggled off while executing inside `taps`.
+
+For air taps (or air movement in general), you should include all necessary air ticks. For example, `taps(sa)` will be treated as `sa st(n)` whereas `taps(stj sa sta(10))` will be treated as `stj sa sta(10) st(n)`.
+
+For movement affected by modifiers (water, lava, etc), Mothball will assume that you will stop while inside these modifiers based on the last movement function. Example: 
+
+```mothball/output
+taps(walk[water](5))
+```
+
+will stop while inside water, while
+
+```mothball/output
+taps(walk[water](5) stop)
+```
+
+will stop on normal ground because the last movement function was `stop` with no modifiers.
