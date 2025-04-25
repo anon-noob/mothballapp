@@ -2,7 +2,7 @@
 Here, you will find all the information for each movement function. A few things to take note.
 
 ## Appending Inputs
-A function that can be "modified by inputs" means that a function can append inputs like this: `sprint.wa`. This means to sprint with W and A. If no input is given, then it defaults to just W. Possible inputs are combinations of WASD. Any 45 strafe function cannot be modified by inputs. Any movement where the player does not input anything (`stop`, `stopair`, `stopjump`, etc) cannot be modified by inputs.
+A function that can be "modified by inputs" means that a function can append inputs like this: `sprint.wa`. This means to sprint with W and A. If no input is given, then it defaults to just W. Possible inputs are combinations of WASD. Any 45 strafe function cannot be modified by inputs. Any movement where the player does not input anything (such as `stop`, `stopair`, `stopjump`, etc) cannot be modified by inputs.
 
 ## Movement Modifiers
 You can place modifiers in between square brackets `[]` before the function arguments. Valid modifiers are `water (wt) web lava (lv) block (bl) ladder (ld,vine)` with aliases shown in parenthesis. Water means the player is inside water, web means the player is insie web, lava means the player is inside lava, block means the player is sword blocking or shielding, and ladder means the player is inside the ladder hitbox. The following are valid syntax. They are not equivalent to each other.
@@ -169,6 +169,22 @@ w(2) st # walk 2 ticks, then stop for 1 tick #
 st.wd # raises an error: cannot be modified by an input #
 ```
 
+## Sneakstop
+```mothball/signature
+sneakstop
+```
+
+No movement input for `duration` ticks with a ground slipperiness of `slip` while shifting. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs.
+Examples:
+
+```mothball
+snst(2) # sneak and stop for 2 ticks #
+w(2) snst # walk 2 ticks, then sneak and stop for 1 tick #
+snst.wd # raises an error: cannot be modified by an input #
+```
+
+This function might be useful when simulating 1.14+ movement because of sneak delay.
+
 ## Walkair
 ```mothball/signature
 walkair
@@ -286,6 +302,22 @@ sta(2) # stop in air for 2 ticks #
 wj sta(11) # jump, then stop in air for 11 ticks #
 sta.wd # raises an error: cannot be modified by an input #
 ```
+
+## Sneakstopair
+```mothball/signature
+snsta
+```
+
+While airborne, no movement input for `duration` while sneaking. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs.
+Examples:
+
+```mothball
+snsta(2) # sneak and stop in air for 2 ticks #
+wj snsta(11) # jump, then sneak and stop in air for 11 ticks #
+snsta.wd # raises an error: cannot be modified by an input #
+```
+
+This function might be useful when simulating 1.14+ movement because of sneak delay.
 
 ## Walkjump
 ```mothball/signature
@@ -406,7 +438,7 @@ sj45.wd # raises an error: cannot be modified by an input #
 
 ## Stopjump
 ```mothball/signature
-stop
+stopjump
 ```
 
 Jump with no horizontal movement input for `duration` ticks with a ground slipperiness of `slip`. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `stj(t) = stj(1) sta(t-1)`.
@@ -416,6 +448,21 @@ Examples:
 stj(7) # stop jump for 7 ticks #
 st.wd # raises an error: cannot be modified by an input #
 ```
+
+## Sneakstopjump
+```mothball/signature
+snstj
+```
+
+Jump with no horizontal movement input for `duration` ticks with a ground slipperiness of `slip`, all while sneaking. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `stj(t) = stj(1) sta(t-1)`.
+Examples:
+
+```mothball
+snstj(7) # stop jump and sneak for 7 ticks #
+snstj.wd # raises an error: cannot be modified by an input #
+```
+
+This function might be useful when simulating 1.14+ movement because of sneak delay.
 
 ## Sprintstrafejump
 ```mothball/signature
