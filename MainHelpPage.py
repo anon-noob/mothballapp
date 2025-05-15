@@ -57,14 +57,14 @@ with open(os.path.join(base_path, "Mothball_Pages/SetterDocumentation.txt")) as 
 
 
 class MainHelpPage:
-    def __init__(self, master):
+    def __init__(self, master, options):
         self.top = tk.Toplevel(master)
 
         self.master = master
         self.top.title("Mothball Help Page")
 
         self.left_frame = tk.Frame(self.top)
-        self.left_frame.pack(side="left", fill="y")
+        self.left_frame.pack(side="left", fill="y", expand=True)
 
         self.tree = ttk.Treeview(self.left_frame)
         
@@ -73,7 +73,7 @@ class MainHelpPage:
         self.right_frame = tk.Frame(self.top)
         self.right_frame.pack(side="right", expand=True, fill="both")
 
-        self.current_page = Page(self.right_frame, scrollable=True)
+        self.current_page = Page(self.right_frame, options, scrollable=True, fontname="Times New Roman")
         self.current_page_name = "welcome"
         self.current_page.parse_text(welcomePage)
         self.current_page.mainframe.configure(state="disabled")
