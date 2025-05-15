@@ -30,6 +30,9 @@ class Cell(tk.Frame):
         self.grandparent = grandparent
         self.type = "code"
         self.last_applied_tag = ""
+        self.options = options
+        self.binds = self.options["Settings"]["Bindings"]
+        self.padx = 0
 
         if self.mode == "xz":
             self.inputs = ["w","a","s","d", "wa", "wd", "sa", "sd"]
@@ -59,28 +62,29 @@ class Cell(tk.Frame):
 
         self.configure(background="gray12", border=5)
         self.title_frame = tk.Frame(self, background="gray12")
-        self.title_frame.pack()
+        self.title_frame.pack(padx=self.padx)
         self.label = ttk.Label(self.title_frame, text=f"Code Cell {mode.upper()}", background="gray12", foreground="white", font=("Ariel",self.fontsize))
         self.label.pack()
         
         self.text = tk.Text(self, state='normal', bg="gray12", fg="white", font=("Courier", self.fontsize), wrap=tk.WORD, undo=True, maxundo=-1)
-        self.text.pack()
+        self.text.pack(padx=self.padx)
         self.text.bind('<KeyPress>', lambda event: self.timed(event))
 
         self.label2 = tk.Text(self, background="gray12", foreground="white", height = 1, font=("Courier", self.fontsize), wrap=tk.WORD)
         self.label2.insert("1.0", "Output is shown below ")
         self.label2.configure(state="disabled")
         self.label2.tag_configure("grayed", foreground="gray")
-        self.label2.pack()
+        self.label2.pack(padx=self.padx)
         
         self.output = tk.Text(self, bg="gray12", fg="white", font=("Courier", self.fontsize), wrap=tk.WORD)
-        self.output.pack()
+        self.output.pack(padx=self.padx)
+        self.output_scrollable = False
 
         self.raw_output = []
 
 
         button_frame = tk.Frame(self, background="gray12")
-        button_frame.pack(side="bottom", fill="x")
+        button_frame.pack(side="bottom", fill="x", padx=self.padx)
 
         self.eval_button = tk.Button(button_frame, text="Run", command=self.evaluate, background="gray12", foreground=color, font=("Ariel", 10, "bold"))
         self.add_cell = tk.Button(button_frame, text="Add Cell XZ", background="gray12", foreground=color, font=("Ariel", 10, "bold"))
@@ -103,7 +107,6 @@ class Cell(tk.Frame):
         self.output.insert("1.0", "Run some functions and the output will show here!")
         self.output.configure(state="disabled")
 
-        self.options = options
         # self.bind("<Control-r>", lambda x: self.evaluate())
 
         # Linter
@@ -157,7 +160,7 @@ class Cell(tk.Frame):
             "placeholder": []
         }
 
-        self.text.bind("<Control-o>", lambda e: self.grandparent.load())
+        self.text.bind(f"<{self.binds['Open']}>", lambda e: self.grandparent.load())
         self.label.bind("<Double-1>", self.edit_cell_name)
     
     def edit_cell_name(self, e):
@@ -191,7 +194,12 @@ class Cell(tk.Frame):
     def adjust_height(self, event=0, widget = None):
         if not widget:
             widget = self.text
-        widget.configure(height=widget.count('1.0', 'end', 'displaylines')[0])
+
+        height = widget.count('1.0', 'end', 'displaylines')[0]
+        if widget == self.output and self.options["Settings"]["Max lines"] >= 10: # TO CHANGE
+            height = min(self.options["Settings"]["Max lines"], height)
+
+        widget.configure(height=height)
 
     
     def timed(self, event: tk.Event = 0):
@@ -647,20 +655,23 @@ class Cell(tk.Frame):
 
 
 class Page:
-    def __init__(self, parent, scrollable: bool = False, fontsize: int = 12):
+    def __init__(self, parent, options, scrollable: bool = False, fontname = "Courier", fontsize: int = 12):
         if scrollable:
             self.mainframe = ScrolledText(parent)
         else:
             self.mainframe = tk.Text(parent)
         self.parent = parent
+        self.options = options
+        self.binds = self.options["Settings"]["Bindings"]
 
-        self.mainframe.configure(background="gray15", foreground="white", font=("Times new roman", fontsize), wrap=tk.WORD, spacing1=1, spacing3=1)
+        self.mainframe.configure(background="gray15", foreground="white", font=(fontname, fontsize), wrap=tk.WORD)
+        # self.mainframe.configure(background="gray15", foreground="white", font=("Times new roman", fontsize), wrap=tk.WORD, spacing1=1, spacing3=1)
 
         self.pos = TkinterPosition(1,0)
         self.matches = []
         self.mainframe.bind("<Configure>", self.resize_image_on_resize)
-        self.mainframe.bind("<Control-equal>", lambda e, x=2: self.change_font_size(e, x))
-        self.mainframe.bind("<Control-minus>", lambda e, x=-2: self.change_font_size(e, x))
+        self.mainframe.bind(f"<{self.binds['Zoom in']}>", lambda e, x=2: self.change_font_size(e, x))
+        self.mainframe.bind(f"<{self.binds['Zoom out']}>", lambda e, x=-2: self.change_font_size(e, x))
         self.tags = []
         self.fontsize = fontsize
         
@@ -686,7 +697,7 @@ class Page:
         self.CodeCell = Cell(None, "xz", options)
 
         self.headings = {} # Name: (index, depth)
-        self.mainframe.bind("<Control-f>", self.open_search_widget)
+        self.mainframe.bind(f"<{self.binds['Find']}>", self.open_search_widget)
         self.mainframe.pack_propagate(False)
 
     def reset_code_processor(self):
@@ -1157,12 +1168,10 @@ class TextBox(tk.Frame):
 
         self.configure(background="gray12", border=5)
 
-        self.options = options
-
         self.timer = 0
         self.timer_id = None
 
-        self.textbox = Page(self, False, fontsize=fontsize)
+        self.textbox = Page(self, options, False, fontsize=fontsize)
         self.textbox.mainframe.bind("<Key>", self.timed)
         self.textbox.mainframe.pack(expand=True, fill="y")
         # self.textbox.mainframe.pack_propagate(True)
@@ -1197,17 +1206,19 @@ class TextBox(tk.Frame):
         self.adjust_height(mode='edit')
 
         self.options = options
+        self.binds = self.options["Settings"]["Bindings"]
 
         self.textbox.mainframe.bind("<Key>", self.timed)
         self.timer = 0
         self.timer_id = None
 
-        self.textbox.mainframe.bind("<Control-o>", lambda e: self.grandparent.load())
-        self.textbox.mainframe.unbind("<Control-equal>")
-        self.textbox.mainframe.unbind("<Control-minus>")
+
+        self.textbox.mainframe.bind(f"<{self.binds['Open']}>", lambda e: self.grandparent.load())
+        self.textbox.mainframe.unbind(f"<{self.binds['Zoom in']}>")
+        self.textbox.mainframe.unbind(f"<{self.binds['Zoom out']}>")
     
     def render(self, adjust: bool = True):
-        self.eval_button.configure(command= self.edit, text="edit")
+        self.eval_button.configure(command= self.edit, text="Edit")
         a = self.textbox.mainframe.get("1.0", tk.END)
         self.raw_text = a.strip()
         self.textbox.mainframe.delete("1.0", tk.END)
@@ -1216,18 +1227,20 @@ class TextBox(tk.Frame):
         if adjust: self.adjust_height(mode='render')
         self.textbox.mainframe.configure(state="disabled")
         self.mode = 'render'
+        self.textbox.mainframe.unbind("<Key>")
     
     def edit(self):
         self.textbox.mainframe.configure(state="normal")
         for i in self.textbox.tags:
             self.textbox.mainframe.tag_remove(i, "1.0", tk.END)
         self.textbox.pos = TkinterPosition(1,0)
-        self.eval_button.configure(command= self.render, text="render")
+        self.eval_button.configure(command= self.render, text="Render")
         self.textbox.mainframe.delete("1.0", tk.END)
         self.textbox.mainframe.insert("1.0", self.raw_text)
         self.adjust_height(mode='edit')
         self.textbox.mainframe.configure(state="normal")
         self.mode = 'edit'
+        self.textbox.mainframe.bind("<Key>", self.timed)
 
     def bind_hover(self, button: tk.Button):
         button.bind("<Enter>", func=lambda e: self.on_hover(button))
@@ -1245,40 +1258,28 @@ class TextBox(tk.Frame):
 
         num_lines = self.textbox.mainframe.count("1.0", tk.END, "displaylines")[0]
 
-        if mode == "render": # THIS ALGORITHM SHOULD BE CHANGED!!!
-            a,b = self.textbox.mainframe.yview()
-            num_lines = int(num_lines / (b-a))
-            # for _ in range(100):
-            while True:
-                num_lines += 1
-                # i += 1
-                self.textbox.mainframe.configure(height=num_lines)
-                self.update_idletasks()
-                a,b = self.textbox.mainframe.yview()
-                if a == 0 and b == 1:
-                    break
-            
-            # for _ in range(100):
-            # i = 1
-            while True:
-                num_lines -= 1
-                self.textbox.mainframe.configure(height=num_lines)
-                self.update_idletasks()
-                a,b = self.textbox.mainframe.yview()
-                if a != 0 or b != 1 or num_lines == 0:
-                    num_lines += 1
-                    self.textbox.mainframe.configure(height=num_lines)
-                    self.update_idletasks()
-                    break
-            
-            # print("ITERATED", i, 'TIMES')
-
-        else:
-            self.textbox.mainframe.update_idletasks()
+        if mode == "render": # THIS ALGORITHM SHOULD BE CHANGED PART 2 (?)
+            # print(f"START {num_lines} / {b}-{a}")
+            # print(f"START {num_lines}")
+            # num_lines = int(num_lines / (b-a))
             self.textbox.mainframe.configure(height=num_lines)
+            self.textbox.mainframe.update_idletasks()
+            a,b = self.textbox.mainframe.yview()
+            # print(num_lines/(b-a))
+            # print("BOUNDS", a,b)
+            self.textbox.mainframe.configure(height=int(num_lines/(b-a)) + 1)
+            self.textbox.mainframe.update_idletasks()
+            # a,b = self.textbox.mainframe.yview()
+            # print("NEW BOUNDS", a,b)
+            
+
+        elif mode == "edit":
+            if num_lines != self.rows:
+                self.textbox.mainframe.configure(height=num_lines)
+                self.textbox.mainframe.update_idletasks()
+            # print(num_lines)
         
         self.rows = num_lines
-        # print(self.rows)
     
     def adjust_width(self, width: int):
         self.textbox.mainframe.configure(width=width)
@@ -1297,16 +1298,16 @@ class TextBox(tk.Frame):
 
 
 if __name__ == "__main__":
-    # r = tk.Tk()
-    # a = Cell(r, "xz", options) # Test
-    # a.grid(row=0, column=0, sticky="nswe")
-    # r.grid_rowconfigure(0, weight=1)
-    # r.grid_columnconfigure(0, weight=1)
-    print('hi there!')
+    r = tk.Tk()
+    a = Cell(r, "xz", options) # Test
+    a.grid(row=0, column=0, sticky="nswe")
+    r.grid_rowconfigure(0, weight=1)
+    r.grid_columnconfigure(0, weight=1)
+    
     
     # r = tk.Tk()
     # a = TextBox(r, options)
     # a.grid(row=0, column=0, sticky="nswe")
     # r.grid_rowconfigure(0, weight=1)
     # r.grid_columnconfigure(0, weight=1)
-    # r.mainloop()
+    r.mainloop()
