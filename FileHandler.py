@@ -34,7 +34,8 @@ options = {"Current-theme":
     "positive-number": "#00ff00",
     "negative-number": "#ff6347",
     "placeholder": "#808080"
-}
+},
+"Name": "Default"
 },
 "Themes": {
     "Default": {"Code":{
@@ -71,10 +72,23 @@ options = {"Current-theme":
     }
     }
 }, 
-"Settings": {"Ask before deleting a cell": False},
+"Settings": {
+    "Ask before deleting a cell": False,
+    "Max lines": 12,
+    "Bindings": {
+        "Open": "Control-o",
+        "New": "Control-n",
+        "Save": "Control-s",
+        "Undo": "Control-z",
+        "Redo": "Control-y",
+        "Zoom in": "Control-equal",
+        "Zoom out": "Control-minus",
+        "Execute": "Control-r",
+        "Find": "Control-f"
+    }},
 "Show-tutorial": True,
 "Default-Font-Size": 12,
-"Version": "v0.4-alpha"
+"Version": "v1.0.2"
 }
 
 def get_path_to_options():
@@ -158,7 +172,7 @@ def update_documents(version_str: str):
         
         data['version'] = version_str
         
-        # For this update...
+        # For this update... (i should probably change this)
         i = 1
         while True:
             if str(i) not in data:
@@ -177,8 +191,12 @@ def update_documents(version_str: str):
                 target[key] = value
             elif isinstance(value, dict) and isinstance(target[key], dict):
                 update_dict(target[key], value)
+            else:
+                target[key] = value
+                
 
     update_dict(ops, options)
+
     options_path = get_path_to_options()
     with open(options_path, 'w') as file:
         json.dump(ops, file, indent=4)
