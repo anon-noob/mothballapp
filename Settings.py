@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from CodeCell import Cell
 import tkinter.colorchooser as cc
-
-import tkinter as tk
 import json
 import FileHandler
 import tkinter.messagebox as mb
