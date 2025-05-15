@@ -8,8 +8,7 @@ from tkinter import ttk
 from tkinter.messagebox import askyesnocancel, showinfo, showerror
 import json
 import os
-from ChangeColorDialog import ChangeColorDialog
-from SetttingsDialog import Settings
+import Settings
 from CodeCell import Cell, Page, TextBox
 import MainHelpPage
 import About_Mothball
@@ -18,10 +17,12 @@ from tkinter.filedialog import askopenfile, asksaveasfile
 import sys
 import Version
 
+# Fix binds
+
 class MainNotebookGUI(tk.Tk):
 
     FRAMES: dict[int, Cell | TextBox] = {}
-    VERSION: str = "v1.0.2"
+    VERSION: str = "v1.0.3"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,10 +30,6 @@ class MainNotebookGUI(tk.Tk):
 
         self.current_width = 500
         self.user_directory = os.path.expanduser("~") # maybe
-
-        self.bind("<Control-s>", func=lambda e: self.save())
-        self.bind("<Control-o>", func=lambda e: self.load())
-        self.bind("<Control-n>", func=lambda e: self.new())
 
 
         try:
@@ -47,7 +44,9 @@ class MainNotebookGUI(tk.Tk):
 
         self.file_name = ""
         self.options = FileHandler.get_options()
+        # print(self.options.get("Version"))
         if self.options.get("Version") != MainNotebookGUI.VERSION:
+            # print("YES")
             FileHandler.update_documents(MainNotebookGUI.VERSION)
             self.options = FileHandler.get_options()
         self.fontsize = self.options.get('Default-Font-Size')
@@ -61,7 +60,7 @@ class MainNotebookGUI(tk.Tk):
         
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        self.scrollable_content = ttk.Frame(self.canvas)
+        self.scrollable_content = tk.Frame(self.canvas, background="gray12")
         self.scrollable_content.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
         self.id = self.canvas.create_window((0, 0), window=self.scrollable_content, anchor='nw')
@@ -98,6 +97,12 @@ class MainNotebookGUI(tk.Tk):
         self.credits_window = False
         self.version_window = False
         self.has_unsaved_changes = False
+
+        self.binds = self.options["Settings"]["Bindings"]
+
+        self.bind(f"<{self.binds['Save']}>", func=lambda e: self.save())
+        self.bind(f"<{self.binds['Open']}>", func=lambda e: self.load())
+        self.bind(f"<{self.binds['New']}>", func=lambda e: self.new())
         
         self.scrollable_content.grid_rowconfigure(0, weight=1)
         self.scrollable_content.grid_columnconfigure(0, weight=1)
@@ -115,7 +120,7 @@ class MainNotebookGUI(tk.Tk):
         menubar.add_cascade(label="File", menu=fileMenu)
 
         optionsMenu = tk.Menu(menubar, tearoff=False)
-        optionsMenu.add_command(label="Colors", command=self.edit_colors)
+        # optionsMenu.add_command(label="Colors", command=self.edit_colors)
         optionsMenu.add_command(label="Settings", command=self.settings)
         menubar.add_cascade(label="Options", menu=optionsMenu)
 
@@ -133,16 +138,14 @@ class MainNotebookGUI(tk.Tk):
 
         self.protocol("WM_DELETE_WINDOW", self.on_destroy)
 
-        self.canvas.bind_all("<Control-equal>", lambda e, x=2: self.change_font_size(e, x))
-        self.canvas.bind_all("<Control-minus>", lambda e, x=-2: self.change_font_size(e, x))
-
-        # self.after("idle",self.check_updates)
+        self.canvas.bind_all(f"<{self.binds['Zoom in']}>", lambda e, x=2: self.change_font_size(e, x))
+        self.canvas.bind_all(f"<{self.binds['Zoom out']}>", lambda e, x=-2: self.change_font_size(e, x))
 
     def bind_focused_cell(self, cell: Cell | TextBox):
         if cell.type == "code":
-            self.bind_all("<Control-r>", lambda x: cell.evaluate())
+            self.bind_all(f"<{self.binds['Execute']}>", lambda x: cell.evaluate())
         else:
-            self.bind_all("<Control-r>", lambda x: cell.eval_button.invoke())
+            self.bind_all(f"<{self.binds['Execute']}>", lambda x: cell.eval_button.invoke())
 
     def _on_configure(self, event: tk.Event, widget_id, delay = 500):
         if event.type == tk.EventType.Configure:
@@ -167,7 +170,7 @@ class MainNotebookGUI(tk.Tk):
         if row == 0 and MainNotebookGUI.FRAMES:
             MainNotebookGUI.FRAMES[0].destroy()
             del MainNotebookGUI.FRAMES[0]
-
+        
         if mode == "edit" or mode == "render":
             new_cell = TextBox(self.scrollable_content, options=self.options, grandparent=self, fontsize=self.fontsize)
         elif mode == "xz" or mode == "y":
@@ -179,7 +182,7 @@ class MainNotebookGUI(tk.Tk):
         new_cell.add_text.configure(command=lambda a=row + 1: self.createbox(a, "edit"))
         new_cell.delete_cell.configure(command=lambda a=row + 1: self.deletecell(a))
         new_cell.bind("<FocusIn>", lambda event: self.bind_focused_cell(new_cell))
-        new_cell.grid(row=row + 1, sticky="nswe")
+        new_cell.grid(row=row + 1, sticky="nswe", padx=15)
 
         # Update the scroll region of the canvas
         self.update_idletasks()
@@ -207,7 +210,7 @@ class MainNotebookGUI(tk.Tk):
         self.update_idletasks()
     
     def deletecell(self, row):
-        if self.options["Settings"]["Ask before deleting a cell"] and MainNotebookGUI.FRAMES[row].text.get("1.0", tk.END):
+        if self.options["Settings"]["Ask before deleting a cell"]:
             a = askyesnocancel("Confirm", "Delete cell?")
             if not a:
                 return
@@ -237,18 +240,15 @@ class MainNotebookGUI(tk.Tk):
             frame.pack(fill="x")
             MainNotebookGUI.FRAMES[0] = frame
             
-        self.unbind_all("<Control-r>")
+        self.unbind_all(f"<{self.binds['Execute']}>")
     
     def _on_mousewheel(self, event: tk.Event):
         a = self.winfo_containing(event.x_root, event.y_root)
         if a and a.winfo_toplevel() == self:
             self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
-    def edit_colors(self):
-        ChangeColorDialog(self, self.options)
-    
     def settings(self):
-        Settings(self, self.options)
+        Settings.Settings(self, self.options)
 
     def new(self):
         if self.has_unsaved_changes:
@@ -393,6 +393,7 @@ class MainNotebookGUI(tk.Tk):
     
     def change_settings(self, new_options: dict):
         self.options = new_options
+        # print(self.options["Settings"]["Max lines"])
 
     def change_colors(self, new_options: dict):
         self.options = new_options
@@ -408,7 +409,7 @@ class MainNotebookGUI(tk.Tk):
 
     def show_tutorial(self):
         if not self.help_window:
-            self.help_window = MainHelpPage.MainHelpPage(None)
+            self.help_window = MainHelpPage.MainHelpPage(None, self.options)
             self.help_window.top.bind("<Destroy>", func= self.l)
         else:
             self.help_window.top.focus()
