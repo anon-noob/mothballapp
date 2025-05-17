@@ -4,8 +4,6 @@ import datetime
 import json
 import FileHandler
 import os, sys
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
 
 if getattr(sys, "frozen", False):
     base_path = sys._MEIPASS
@@ -153,6 +151,7 @@ class Wordle:
 
         self.top = tk.Toplevel(master)
         self.top.configure(background="gray12")
+        self.top.title("Parkour Wordle")
         self.msg = tk.Label(self.top, text="Parkour Wordle!", background="gray12", foreground="white", font=("Comic Sans", 24))
         self.msg.grid(row=0, columnspan=5, sticky="nsew")
 
@@ -429,34 +428,42 @@ class HistoryAndMore:
             self.id = self.top.after(1000, update_countdown)
         update_countdown()
         
-        categories = [i for i in stats["Guess Distribution"]]
-        categories[categories.index("0")] = "Fail"
-        frequencies = [j for j in stats["Guess Distribution"].values()]
+        x = [1,2,3,4,5,6,"Fail"]
+        y = [j for j in stats["Guess Distribution"].values()]
+        
+        canvas_width = 500
+        graph_height = 320
+        canvas_height = 400
+        canvas = tk.Canvas(self.top, width=canvas_width, height=canvas_height, bg="gray12")
+        canvas.pack()
 
-        plt.rcParams['figure.facecolor'] = 'darkgray'
-        fig, ax = plt.subplots(figsize=(5, 4), facecolor="darkgray")  # whole figure background
-        ax.set_facecolor('darkgray')  # background inside plot area
+        bar_width = canvas_width // len(x)
+        max_y = max(y)
+        scale = (graph_height + 20 - canvas_height + graph_height) / max_y
+        # scale = (2 * graph_height - 20 - canvas_height) / max_y
+        # print(scale)
 
-        ax.bar(categories, frequencies, color='skyblue', edgecolor='black')
-        ax.set_title("Guess Distribution", color='black')
-        ax.set_xlabel("Guesses", color='black')
-        ax.set_ylabel("Count", color='black')
+        canvas.create_text(canvas_width//2, 20, text="Wins & Losses by Guess Count", font=("Comic Sans", 20), fill="white")
 
-        # Change tick colors to contrast with red background
-        ax.tick_params(colors='black')
-        ax.spines['bottom'].set_color('black')
-        ax.spines['left'].set_color('black')
+        for i, value in enumerate(y):
+            x0 = i * bar_width + 10
+            y0 = graph_height - value * scale + 20
+            x1 = (i + 1) * bar_width - 10
+            y1 = graph_height + 20
+            canvas.create_rectangle(x0, y0, x1, y1, fill="skyblue", outline="skyblue")
+            
+            canvas.create_text((x0 + x1) // 2, graph_height+40, text=str(x[i]), font=("Comic Sans", 18), fill="white")
+            canvas.create_text((x0 + x1) // 2, y0-20, text=value, font=("Comic Sans", 14), fill="white")
 
-        # Embed in Tkinter
-        canvas = FigureCanvasTkAgg(fig, master=self.top)
-        canvas.draw()
-        canvas.get_tk_widget().pack()
+        # Draw x-axis
+        # canvas.create_line(0, canvas_height - graph_height, canvas_width, canvas_height - graph_height, width=2, fill='black')
+        canvas.create_line(0, graph_height+20, canvas_width, graph_height+20, width=2, fill="white")
+        canvas.create_text((canvas_width // 2), canvas_height - 15, text="Guess Distribution", font=("Comic Sans", 18), fill="white")
 
         self.top.protocol("WM_DELETE_WINDOW", self.on_destroy)
 
     def on_destroy(self):
         self.top.after_cancel(self.id)
-        plt.close('all')
         self.top.destroy()
 
 
