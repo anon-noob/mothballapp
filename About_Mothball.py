@@ -25,9 +25,9 @@ Lastly, if you haven't already, download MPK/CYV to enhance your in game parkour
 # Good luck, and happy stratfinding!
 """
 
-    def __init__(self, master):
+    def __init__(self, master, options):
         self.top = tk.Toplevel(master)
-        self.text = Page(self.top, scrollable=True)
+        self.text = Page(self.top, options=options, scrollable=True)
         self.text.mainframe.pack(fill="both", expand=True)
         self.text.mainframe.pack_propagate(True)
         self.text.parse_text(About.TEXT)
@@ -36,5 +36,5 @@ Lastly, if you haven't already, download MPK/CYV to enhance your in game parkour
 
 if __name__ == "__main__":
     root = tk.Tk()
-    About(root)
+    About(root, {})
     root.mainloop()
