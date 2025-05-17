@@ -1,182 +1,232 @@
 import os
-import sys
-from tkinter import ttk
-import tkinter as tk
-from CodeCell import Page
+import json
+import platform
 
-if getattr(sys, "frozen", False):
-    base_path = sys._MEIPASS
-else:
-    base_path = os.path.abspath(".")
+options = {"Current-theme": 
+{"Code":{
+    "fast-movers": "#00ffff",
+    "slow-movers": "#1e90ff",
+    "stoppers": "#7fffd4",
+    "setters": "#ff8c00",
+    "returners": "#ff6347",
+    "inputs": "#00ff00",
+    "modifiers": "#00ff88",
+    "calculators": "#ffc0cb",
+    "numbers": "#ffff00",
+    "comment": "#808080",
+    "nest-mod1": "#ee82ee",
+    "nest-mod2": "#4169e1",
+    "nest-mod0": "#ffd700",
+    "keyword": "#ff00ff",
+    "variable": "#7cfc00",
+    "string": "#ff3030",
+    "backslash": "#fa8072",
+    "comment-backslash": "#424242",
+    "custom-function-parameter": "#e066ff",
+    "custom-function": "#c6e2ff",
+    "error": "#ff0000"},
+"Output":{
+    "z-label": "#00ffff",
+    "x-label": "#ee82ee",
+    "label": "#ff8c00",
+    "warning": "#ff6347",
+    "text": "#ffd700",
+    "positive-number": "#00ff00",
+    "negative-number": "#ff6347",
+    "placeholder": "#808080"
+},
+"Name": "Default"
+},
+"Themes": {
+    "Default": {"Code":{
+        "fast-movers": "cyan",
+        "slow-movers": "dodger blue",
+        "stoppers": "aquamarine",
+        "setters": "dark orange",
+        "returners": "tomato",
+        "inputs": "lime",
+        "modifiers": "#00ff88",
+        "calculators": "pink",
+        "numbers": "yellow",
+        "comment": "gray",
+        "nest-mod1": "violet",
+        "nest-mod2": "royal blue",
+        "nest-mod0": "gold",
+        "keyword": "magenta",
+        "variable": "lawn green",
+        "string": "firebrick1",
+        "backslash": "salmon",
+        "comment-backslash": "gray26",
+        "custom-function-parameter": "MediumOrchid1",
+        "custom-function": "SlateGray1",
+        "error": "red"},
+    "Output":{
+        "z-label": "cyan",
+        "x-label": "violet",
+        "label": "dark orange",
+        "warning": "tomato",
+        "text": "gold",
+        "positive-number": "lime",
+        "negative-number": "tomato",
+        "placeholder": "gray"
+    }
+    }
+}, 
+"Settings": {
+    "Ask before deleting a cell": False,
+    "Max lines": 12,
+    "Bindings": {
+        "Open": "Control-o",
+        "New": "Control-n",
+        "Save": "Control-s",
+        "Undo": "Control-z",
+        "Redo": "Control-y",
+        "Zoom in": "Control-equal",
+        "Zoom out": "Control-minus",
+        "Execute": "Control-r",
+        "Find": "Control-f"
+    }},
+"Show-tutorial": True,
+"Default-Font-Size": 12,
+"Version": "v1.0.2"
+}
 
-directory = os.path.join(base_path, "Mothball_Pages")
-
-with open(os.path.join(base_path, "Mothball_Pages/Introduction.txt")) as f:
-    introduction = f.read()
-    introductionHEADINGS = Page.get_headings(introduction)
-
-with open(os.path.join(base_path, "Mothball_Pages/DocumentationIntro.txt")) as f:
-    documentationIntro = f.read()
-    documentationIntroHEADINGS = Page.get_headings(documentationIntro)
-
-with open(os.path.join(base_path, "Mothball_Pages/LearnTheBasics.txt")) as f:
-    learnTheBasics = f.read()
-    learnTheBasicsHEADINGS = Page.get_headings(learnTheBasics)
-
-with open(os.path.join(base_path, "Mothball_Pages/MovementDocumentation.txt")) as f:
-    movementDocumentation = f.read()
-    movementDocumentationHEADINGS = Page.get_headings(movementDocumentation)
-
-with open(os.path.join(base_path, "Mothball_Pages/MovementHelp.txt")) as f:
-    movementHelp = f.read()
-    movementHelpHEADINGS = Page.get_headings(movementHelp)
-
-with open(os.path.join(base_path, "Mothball_Pages/OptimizationHelp.txt")) as f:
-    optimizationHelp = f.read()
-    optimizationHelpHEADINGS = Page.get_headings(optimizationHelp)
-
-with open(os.path.join(base_path, "Mothball_Pages/OutputHelp.txt")) as f:
-    outputHelp = f.read()
-    outputHelpHEADINGS = Page.get_headings(outputHelp)
-
-with open(os.path.join(base_path, "Mothball_Pages/SetterHelp.txt")) as f:
-    setterHelp = f.read()
-    setterHelpHEADINGS = Page.get_headings(setterHelp)
-
-with open(os.path.join(base_path, "Mothball_Pages/WelcomePage.txt")) as f:
-    welcomePage = f.read()
-    welcomePageHEADINGS = Page.get_headings(welcomePage)
-
-with open(os.path.join(base_path, "Mothball_Pages/UsingTheIDE.txt")) as f:
-    usingTheIDE = f.read()
-    usingTheIDEHEADINGS = Page.get_headings(usingTheIDE)
-
-with open(os.path.join(base_path, "Mothball_Pages/SetterDocumentation.txt")) as f:
-    setterdocumentation = f.read()
-    setterdocumentationHEADINGS = Page.get_headings(setterdocumentation)
-
-
-class MainHelpPage:
-    def __init__(self, master, options):
-        self.top = tk.Toplevel(master)
-
-        self.master = master
-        self.top.title("Mothball Help Page")
-
-        self.left_frame = tk.Frame(self.top)
-        self.left_frame.pack(side="left", fill="y", expand=True)
-
-        self.tree = ttk.Treeview(self.left_frame)
+def get_path_to_options():
+    operating_system = platform.system()
+    if operating_system == "Windows":
+        return os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "Mothball", "Mothball Settings", "Options.json")
+    elif operating_system == "Darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Mothball", "Mothball Settings", "Options.json")
+    elif operating_system == "Linux":
+        return os.path.join(os.path.expanduser("~"), ".config", "Mothball", "Mothball Settings", "Options.json")
         
-        self.tree.pack(fill='y', expand=True)
 
-        self.right_frame = tk.Frame(self.top)
-        self.right_frame.pack(side="right", expand=True, fill="both")
+def create_directories(force_update = False):
+    operating_system = platform.system()
+    if operating_system == "Windows":
+        create_windows_directories(force_update)
+    elif operating_system == "Darwin":
+        create_mac_directories(force_update)
+    elif operating_system == "Linux":
+        create_linux_directories(force_update)
 
-        self.current_page = Page(self.right_frame, options, scrollable=True, fontname="Times New Roman")
-        self.current_page_name = "welcome"
-        self.current_page.parse_text(welcomePage)
-        self.current_page.mainframe.configure(state="disabled")
-        self.current_page.mainframe.pack_propagate(True)
-        self.current_page.mainframe.pack(fill="both", expand=True)
-        # self.current_page.mainframe.pack_propagate(False)
+def create_windows_directories(force_update = False):
+    user_directory = os.path.expanduser("~")
+    os.makedirs(os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Mothball Settings"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-        self.tree.bind("<<TreeviewSelect>>", self.on_treeview_select)
+    if not os.path.exists(os.path.join(user_directory, "AppData" ,"Roaming", "Mothball", "Mothball Settings", "Options.json")) or force_update:
+        with open(os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
+            json.dump(options, file)   
 
-        self.tree.insert("", "end",iid=0, text="Welcome to Mothball")
-        self.tree.insert("", "end",iid=1, text="Learn the Basics")
-        self.tree.insert("", "end",iid=2, text="Documentation")
+def create_mac_directories(force_update = False):
+    user_directory = os.path.expanduser("~")
+    os.makedirs(os.path.join(user_directory, "Library", "Application Support", "Mothball", "Mothball Settings"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-        self.add_to_tree(1, 'usage', "Using the IDE", usingTheIDEHEADINGS)
-        self.add_to_tree(1, 'intro', "Introduction", introductionHEADINGS)
-        self.add_to_tree(1, 'movement', "Movement", movementHelpHEADINGS)
-        self.add_to_tree(1, 'setters', "Setters", setterHelpHEADINGS)
-        self.add_to_tree(1, 'outputs', "Outputs", outputHelpHEADINGS)
-        self.add_to_tree(1, 'optimize', "Optimization", optimizationHelpHEADINGS)
+    if not os.path.exists(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings", "Options.json")) or force_update:
+        with open(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings" ,"Options.json"), "w") as file:
+            json.dump(options, file)
+
+def create_linux_directories(force_update = False):
+    user_directory = os.path.expanduser("~")
+    os.makedirs(os.path.join(user_directory, ".config", "Mothball" ,"Mothball Settings"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
+
+    if not os.path.exists(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json")) or force_update:
+        with open(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
+            json.dump(options, file)
+
+def create_minigame_directories():
+    operating_system = platform.system()
+    user_directory = os.path.expanduser("~")
+    if operating_system == "Windows":
+        directory = os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Minigames")
+    elif operating_system == "Darwin":
+        directory = os.path.join(user_directory, "Library", "Application Support", "Mothball", "Minigames")
+    elif operating_system == "Linux":
+        directory = os.path.join(user_directory, ".config", "Mothball", "Minigames")
+    
+    os.makedirs(directory, exist_ok=True)
+    if not os.path.exists(os.path.join(directory, "Stats.json")):
         
-        self.add_to_tree(2, 'movementdocumentation', 'Movement Functions', movementDocumentationHEADINGS)
-        self.add_to_tree(2, 'setterdocumentation', 'Setter Functions', setterdocumentationHEADINGS)
-
-    def add_to_tree(self, depth: int, id_name: str, display_name: str, HEADINGS: dict):
-        last_heading1 = ""
-        last_heading2 = ""
-        self.tree.insert(depth, "end", iid=id_name, text=display_name)
-        for title, (index, depth) in HEADINGS.items():
-            if depth == 1:
-                self.tree.insert(id_name, 'end', iid=id_name + " " + index, text=title)
-                last_heading1 = id_name + " " + index
-            elif depth == 2:
-                self.tree.insert(last_heading1, 'end', iid=id_name + " " + index, text=title)
-                last_heading2 = id_name + " " + index
-            elif depth == 3:
-                self.tree.insert(last_heading2, 'end', iid=id_name + " " + index, text=title)
-
-
-    def on_treeview_select(self, event):
-        selection = self.tree.selection()
-        if selection:
-            item_id = selection[0]
-            try: 
-                item_id = int(item_id)
-                if item_id == 0:
-                    self.show("welcome")
-                elif item_id == 1:
-                    self.show("learn")
-                elif item_id == 2:
-                    self.show("doc")
-
-            except ValueError:
-                try:
-                    page, index = item_id.split(" ")
-                    if self.current_page_name != page:
-                        self.show(page)
-                    self.current_page.mainframe.see(index)
-                except:
-                    self.show(item_id)
-
-    def clear_page(self):
-        self.current_page.mainframe.configure(state="normal")
-        for tag_name in self.current_page.tags:
-            self.current_page.mainframe.tag_remove(tag_name, "1.0", tk.END)
-        self.current_page.mainframe.delete("1.0", tk.END)
-        self.current_page.pos.row = 1
-        self.current_page.pos = self.current_page.pos.reset_column()
-        self.current_page.images = {}
+        a = {"Parkour Wordle": {
+            "Wins": 0, "Lose": 0, "Last Game": {"Game ID": 0, "Result": None}, "Resume Game State": {1:"", 2:"", 3:"", 4:"", 5:"", 6:""}, "Guess Distribution": {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0}
+        }}
         
-    def show(self, page_name):
-        if self.current_page_name == page_name:
-            return
-        self.clear_page()
-        match page_name:
-            case"intro":
-                self.current_page.parse_text(introduction)
-            case "movement":
-                self.current_page.parse_text(movementHelp)
-            case "outputs":
-                self.current_page.parse_text(outputHelp)
-            case "optimize":
-                self.current_page.parse_text(optimizationHelp)
-            case "setters":
-                self.current_page.parse_text(setterHelp)
-            case "welcome":
-                self.current_page.parse_text(welcomePage)
-            case "learn":
-                self.current_page.parse_text(learnTheBasics)
-            case "doc":
-                self.current_page.parse_text(documentationIntro)
-            case "movementdocumentation":
-                self.current_page.parse_text(movementDocumentation)
-            case "setterdocumentation":
-                self.current_page.parse_text(setterdocumentation)
-            case "usage":
-                self.current_page.parse_text(usingTheIDE)
-        self.current_page_name = page_name
-        self.current_page.mainframe.configure(state="disabled")
+        with open(os.path.join(directory, "Stats.json"), "w") as file:
+            json.dump(a, file, indent=4)
 
+def get_path_to_minigame_stats():
+    operating_system = platform.system()
+    user_directory = os.path.expanduser("~")
+    if operating_system == "Windows":
+        directory = os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Minigames", "Stats.json")
+    elif operating_system == "Darwin":
+        directory = os.path.join(user_directory, "Library", "Application Support", "Mothball", "Minigames", "Stats.json")
+    elif operating_system == "Linux":
+        directory = os.path.join(user_directory, ".config", "Mothball", "Minigames", "Stats.json")
+    return directory
+    
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    a = MainHelpPage(root)
-    tk.Button(root, text="Example Button").pack()
-    # print(a.master)
-    root.mainloop()
+def get_options():
+    operating_system = platform.system()
+    if operating_system == "Windows":
+        return get_windows_options()
+    elif operating_system == "Darwin":
+        return get_mac_options()
+    elif operating_system == "Linux":
+        return get_linux_options()
+
+def get_windows_options():
+    with open(os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "Mothball", "Mothball Settings" ,"Options.json")) as file:
+        return json.load(file)
+
+def get_mac_options():
+    with open(os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Mothball", "Mothball Settings", "Options.json")) as file:
+        return json.load(file)
+    
+def get_linux_options():
+    with open(os.path.join(os.path.expanduser("~"), ".config", "Mothball", "Mothball Settings", "Options.json")) as file:
+        return json.load(file)
+
+def update_documents(version_str: str):
+    "Updates the document files and the settings file"
+    create_minigame_directories()
+    user_directory = os.path.expanduser("~")
+    documents_path = os.path.join(user_directory, "Documents", "Mothball", "Notebooks")
+    json_files = [f for f in os.listdir(documents_path) if f.endswith('.json')]
+
+    for json_file in json_files:
+        file_path = os.path.join(documents_path, json_file)
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        
+        data['version'] = version_str
+        
+        # For this update... (i should probably change this)
+        i = 1
+        while True:
+            if str(i) not in data:
+                break
+            if data[str(i)].get('type') is None:
+                data[str(i)]['type'] = 'code'
+            i += 1
+
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+    
+    ops = get_options()
+    def update_dict(target, source):
+        for key, value in source.items():
+            if key not in target:
+                target[key] = value
+            elif isinstance(value, dict) and isinstance(target[key], dict):
+                update_dict(target[key], value)
+                
+
+    update_dict(ops, options)
+
+    options_path = get_path_to_options()
+    with open(options_path, 'w') as file:
+        json.dump(ops, file, indent=4)
