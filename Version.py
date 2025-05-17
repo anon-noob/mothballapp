@@ -4,9 +4,9 @@ import requests
 
 class Version:
         
-    def __init__(self, version, master=None):
+    def __init__(self, version, master, options):
         self.top = tk.Toplevel(master)
-        self.text = Page(self.top, scrollable=True)
+        self.text = Page(self.top, options=options, scrollable=True)
         self.text.mainframe.pack(fill="both", expand=True)
         self.text.mainframe.pack_propagate(True)
 
