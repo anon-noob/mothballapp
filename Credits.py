@@ -10,13 +10,13 @@ To everyone else who has contributed to Mothball, whether it be through code, su
 And to you for using Mothball, thank you!
 
 # News
-Thank Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)) for helping us revert back to good movement mechanics.
+Please stop watching the minecraft movie...
 
-THE MEME IS DEAD! NO MORE LAVA CHICKEN JOCKEY!
+Thank Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)) for helping us revert back to good movement mechanics. 
 """
-    def __init__(self, master=None):
+    def __init__(self, master, options):
         self.top = tk.Toplevel(master)
-        self.text = Page(self.top, scrollable=True)
+        self.text = Page(self.top, options, scrollable=True)
         self.text.mainframe.pack_propagate(True)
         self.text.mainframe.pack(fill="both", expand=True)
         self.text.parse_text(Credits.TEXT)
@@ -24,5 +24,5 @@ THE MEME IS DEAD! NO MORE LAVA CHICKEN JOCKEY!
 
 if __name__ == "__main__":
     root = tk.Tk()
-    Credits(root)
+    Credits(root, {})
     root.mainloop()
