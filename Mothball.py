@@ -16,6 +16,7 @@ import Credits
 from tkinter.filedialog import askopenfile, asksaveasfile
 import sys
 import Version
+import ParkourWordle
 
 # Fix binds
 
@@ -44,9 +45,7 @@ class MainNotebookGUI(tk.Tk):
 
         self.file_name = ""
         self.options = FileHandler.get_options()
-        # print(self.options.get("Version"))
         if self.options.get("Version") != MainNotebookGUI.VERSION:
-            # print("YES")
             FileHandler.update_documents(MainNotebookGUI.VERSION)
             self.options = FileHandler.get_options()
         self.fontsize = self.options.get('Default-Font-Size')
@@ -96,6 +95,7 @@ class MainNotebookGUI(tk.Tk):
         self.about_window = False
         self.credits_window = False
         self.version_window = False
+        self.wordle_window = False
         self.has_unsaved_changes = False
 
         self.binds = self.options["Settings"]["Bindings"]
@@ -120,7 +120,6 @@ class MainNotebookGUI(tk.Tk):
         menubar.add_cascade(label="File", menu=fileMenu)
 
         optionsMenu = tk.Menu(menubar, tearoff=False)
-        # optionsMenu.add_command(label="Colors", command=self.edit_colors)
         optionsMenu.add_command(label="Settings", command=self.settings)
         menubar.add_cascade(label="Options", menu=optionsMenu)
 
@@ -135,6 +134,10 @@ class MainNotebookGUI(tk.Tk):
         updateMenu.add_command(label="Check For Updates", command=lambda x=True: self.check_updates(x))
         updateMenu.add_command(label="Update Files", command=self.update_documents)
         menubar.add_cascade(label="Update", menu=updateMenu)
+
+        minigameMenu = tk.Menu(menubar, tearoff=False)
+        minigameMenu.add_command(label="Wordle", command=self.wordle)
+        menubar.add_cascade(label="Minigames", menu=minigameMenu)
 
         self.protocol("WM_DELETE_WINDOW", self.on_destroy)
 
@@ -416,24 +419,31 @@ class MainNotebookGUI(tk.Tk):
     
     def show_about(self):
         if not self.about_window:
-            self.about_window = About_Mothball.About(None)
+            self.about_window = About_Mothball.About(None, options=self.options)
             self.about_window.top.bind("<Destroy>", func= self.m)
         else:
             self.about_window.top.focus()
     
     def show_credits(self):
         if not self.credits_window:
-            self.credits_window = Credits.Credits(None)
+            self.credits_window = Credits.Credits(None, options = self.options)
             self.credits_window.top.bind("<Destroy>", func= self.n)
         else:
             self.credits_window.top.focus()
     
     def show_current_version_changelog(self):
         if not self.version_window:
-            self.version_window = Version.Version(self.VERSION, None)
+            self.version_window = Version.Version(self.VERSION, None, options = self.options)
             self.version_window.top.bind("<Destroy>", func= self.o)
         else:
-            self.version_window.focus()
+            self.version_window.top.focus()
+    
+    def wordle(self):
+        if not self.wordle_window:
+            self.wordle_window = ParkourWordle.Wordle(None)
+            self.wordle_window.top.bind("<Destroy>", func= self.p)
+        else:
+            self.wordle_window.top.focus()
 
     # idfk
     def l(self, e):
@@ -448,6 +458,9 @@ class MainNotebookGUI(tk.Tk):
     def o(self, e):
         self.version_window = False
     
+    def p(self, e):
+        self.wordle_window = False
+    
     def on_destroy(self):
         if self.has_unsaved_changes:
             a = askyesnocancel("Save file?", "You have unsaved changes. Save file?")
@@ -459,6 +472,8 @@ class MainNotebookGUI(tk.Tk):
         with open(FileHandler.get_path_to_options(), "w+") as file:
             json.dump(self.options, file, indent=4)
 
+        if self.wordle_window:
+            self.wordle_window.on_destroy()
         self.destroy()
     
     def check_updates(self, show_message = False):
