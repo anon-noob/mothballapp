@@ -137,6 +137,37 @@ def create_linux_directories(force_update = False):
         with open(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
             json.dump(options, file)
 
+def create_minigame_directories():
+    operating_system = platform.system()
+    user_directory = os.path.expanduser("~")
+    if operating_system == "Windows":
+        directory = os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Minigames")
+    elif operating_system == "Darwin":
+        directory = os.path.join(user_directory, "Library", "Application Support", "Mothball", "Minigames")
+    elif operating_system == "Linux":
+        directory = os.path.join(user_directory, ".config", "Mothball", "Minigames")
+    
+    os.makedirs(directory, exist_ok=True)
+    if not os.path.exists(os.path.join(directory, "Stats.json")):
+        
+        a = {"Parkour Wordle": {
+            "Wins": 0, "Lose": 0, "Last Game": {"Game ID": 0, "Result": None}, "Resume Game State": {1:"", 2:"", 3:"", 4:"", 5:"", 6:""}, "Guess Distribution": {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 0:0}
+        }}
+        
+        with open(os.path.join(directory, "Stats.json"), "w") as file:
+            json.dump(a, file, indent=4)
+
+def get_path_to_minigame_stats():
+    operating_system = platform.system()
+    user_directory = os.path.expanduser("~")
+    if operating_system == "Windows":
+        directory = os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Minigames", "Stats.json")
+    elif operating_system == "Darwin":
+        directory = os.path.join(user_directory, "Library", "Application Support", "Mothball", "Minigames", "Stats.json")
+    elif operating_system == "Linux":
+        directory = os.path.join(user_directory, ".config", "Mothball", "Minigames", "Stats.json")
+    return directory
+    
 
 def get_options():
     operating_system = platform.system()
@@ -161,6 +192,7 @@ def get_linux_options():
 
 def update_documents(version_str: str):
     "Updates the document files and the settings file"
+    create_minigame_directories()
     user_directory = os.path.expanduser("~")
     documents_path = os.path.join(user_directory, "Documents", "Mothball", "Notebooks")
     json_files = [f for f in os.listdir(documents_path) if f.endswith('.json')]
@@ -191,8 +223,6 @@ def update_documents(version_str: str):
                 target[key] = value
             elif isinstance(value, dict) and isinstance(target[key], dict):
                 update_dict(target[key], value)
-            else:
-                target[key] = value
                 
 
     update_dict(ops, options)
