@@ -161,7 +161,7 @@ class Wordle:
                 self.blanks[i][j].grid(row=i+1, column=j, sticky="ew")
         
         self.guesses = {i+1:"" for i in range(6)}
-        self.next_available = [0,0]
+        self.next_available: list[int] = [0,0]
         self.guess_count = 0
         self.game_result = None
         self.add_to_stats = True
@@ -252,6 +252,11 @@ class Wordle:
                 self.typed_word = ""
             else:
                 self.msg.configure(text=f"{self.typed_word} is not a word")
+                for i in range(5):
+                    self.animate(self.blanks[self.next_available[0]][i], 200, "red")
+                for i in range(5):
+                    self.blanks[self.next_available[0]][i].after(500, lambda j=i: self.animate(self.blanks[self.next_available[0]][j], 200, "gray20"))
+                    
     
     def check(self, word):
         row = self.next_available[0]
@@ -339,8 +344,10 @@ class Wordle:
     def animate(self, widget, duration=200, target_color=None):
         color_map = {
             "gray12": "#1f1f1f",
+            "gray20": "#333333",
             "yellow": "#ffff00",
-            "green": "#00ff00"
+            "green": "#00ff00",
+            "red": "#ff0000"
         }
         if target_color not in color_map:
             return
