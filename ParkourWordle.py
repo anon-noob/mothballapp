@@ -91,6 +91,7 @@ class Wordle:
             help_button.pack()
 
             self.wordle_stats = stats
+            self.contrast = False
             wins = stats["Wins"]
             lose = stats["Lose"]
 
@@ -108,12 +109,18 @@ class Wordle:
             self.history = tk.Button(self, text="More", command=self.openhistory, background="gray12", foreground="white", font=("Comic Sans", 24))
             self.history.pack()
 
+            self.contrast_option = tk.Button(self, text="Contrast", command=self.togglecontrast, background="gray12", foreground="white", font=("Comic Sans", 20))
+            self.contrast_option.pack()
+
             self.clipboard_message = ""
-        
+
+        def togglecontrast(self):
+            self.contrast = not self.contrast
+            self.master.togglecontrast(self.contrast)
 
         def openhelp(self):
             if not self.help_page:
-                self.help_page = HelpPage(self)
+                self.help_page = HelpPage(self, contrast=self.contrast)
                 self.help_page.top.bind("<Destroy>", func = self.setfalse)
             else:
                 self.help_page.top.focus()
@@ -155,6 +162,8 @@ class Wordle:
         self.msg = tk.Label(self.top, text="Parkour Wordle!", background="gray12", foreground="white", font=("Comic Sans", 24))
         self.msg.grid(row=0, columnspan=5, sticky="nsew")
 
+        self.top.togglecontrast = lambda b: self.togglecontrast(b)
+
         self.blanks = {j:{i: tk.Button(self.top, text=" ", width=3, height=1,background="gray20", font=("Ariel", 30, 'bold')) for i in range(5)} for j in range(6)}
         for i in self.blanks:
             for j in self.blanks[i]:
@@ -191,6 +200,14 @@ class Wordle:
         self.yellow = set()
         self.gray = set()
 
+        self.color_map = {
+            "gray12": "#1f1f1f",
+            "gray20": "#333333",
+            "yellow": "#ffff00",
+            "green": "#00ff00",
+            "red": "#ff0000"
+        }
+
         self.side = Wordle.SideFrame(self.top, self.wordle_stats)
         self.side.grid(column=5, row=0, rowspan=7)
 
@@ -216,6 +233,50 @@ class Wordle:
             self.wordle_stats["Resume Game State"] = self.guesses
 
         self.top.protocol("WM_DELETE_WINDOW", self.on_destroy)
+
+    def togglecontrast(self, boolean: bool):
+        if boolean:
+            self.color_map["yellow"] = "#00aaff"  # Blue
+            self.color_map["green"] = "#ffaa00"  # Orange
+            for i in self.blanks:
+                for j in self.blanks[i]:
+                    btn = self.blanks[i][j]
+                    current_bg = btn.cget("background")
+                    # Map green to orange, yellow to blue
+                    if current_bg == "green" or current_bg == "#00ff00":
+                        btn.configure(background="#ffaa00")  # Orange
+                    elif current_bg == "yellow" or current_bg == "#ffff00":
+                        btn.configure(background="#00aaff")  # Blue
+            
+            # Update keyboard colors for contrast mode
+            for key, btn in self.keyboard.buttons.items():
+                current_bg = btn.cget("background")
+                if current_bg == "green" or current_bg == "#00ff00":
+                    btn.configure(background="#ffaa00")  # Orange
+                elif current_bg == "yellow" or current_bg == "#ffff00":
+                    btn.configure(background="#00aaff")  # Blue
+
+        else:
+            self.color_map["green"] = "00ff00"
+            self.color_map["yellow"] = "ffff00"
+            for i in self.blanks:
+                for j in self.blanks[i]:
+                    btn = self.blanks[i][j]
+                    current_bg = btn.cget("background")
+                    # Map orange back to green, blue back to yellow
+                    if current_bg == "#ffaa00":
+                        btn.configure(background="#00ff00")  # Green
+                    elif current_bg == "#00aaff":
+                        btn.configure(background="#ffff00")  # Yellow
+            
+            # Update keyboard colors back to normal mode
+            for key, btn in self.keyboard.buttons.items():
+                current_bg = btn.cget("background")
+                if current_bg == "#ffaa00":
+                    btn.configure(background="#00ff00")  # Green
+                elif current_bg == "#00aaff":
+                    btn.configure(background="#ffff00")  # Yellow
+        
 
     def on_destroy(self):
         if self.side.history_page:
@@ -342,18 +403,12 @@ class Wordle:
         
 
     def animate(self, widget, duration=200, target_color=None):
-        color_map = {
-            "gray12": "#1f1f1f",
-            "gray20": "#333333",
-            "yellow": "#ffff00",
-            "green": "#00ff00",
-            "red": "#ff0000"
-        }
-        if target_color not in color_map:
+        
+        if target_color not in self.color_map:
             return
 
         start_color = widget.winfo_rgb(widget.cget('background'))
-        end_color = widget.winfo_rgb(color_map[target_color])
+        end_color = widget.winfo_rgb(self.color_map[target_color])
 
         steps = 10
         delay = duration // steps
@@ -369,7 +424,7 @@ class Wordle:
 
         def step_func(step=0):
             if step > steps:
-                widget.configure(background=color_map[target_color])
+                widget.configure(background=self.color_map[target_color])
                 return
             new_color = interpolate(start_color, end_color, step, steps)
             widget.configure(background=rgb_to_hex(new_color))
@@ -380,7 +435,7 @@ class Wordle:
     
 
 class HelpPage:
-    def __init__(self, master):
+    def __init__(self, master, contrast=False):
         self.top = tk.Toplevel(master, background="gray12")
         self.top.title("Help on Parkour Wordle")
         self.label1 = tk.Label(self.top, text="How to Play",  background="gray12", foreground="white", font=("Comic Sans", 24))
